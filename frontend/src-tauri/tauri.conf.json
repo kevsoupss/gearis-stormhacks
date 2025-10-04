@@ -7,7 +7,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "gearis-stormhacks",
+    "productName": "frontend",
     "version": "0.1.0"
   },
   "tauri": {
@@ -20,7 +20,7 @@
     },
     "windows": [
       {
-        "title": "gearis-stormhacks",
+        "title": "frontend",
         "width": 800,
         "height": 600
       }
@@ -31,7 +31,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.kevin.gearis-stormhacks",
+      "identifier": "com.kevin.frontend",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
