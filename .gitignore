@@ -1,2 +1,31 @@
-./venv
-__pycache__
+# Node / frontend
+node_modules/
+dist/
+.env
+.vscode/
+*.log
+
+# Tauri / Rust
+src-tauri/target/
+src-tauri/tauri.conf.json.bak
+**/*.rs.bk
+
+# Python / backend
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.env
+*.log
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Optional: build outputs
+*.exe
+*.dll
+*.so
+*.dylib
