@@ -1,4 +1,3 @@
-# backend/main.py
 
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
@@ -60,20 +59,44 @@ async def upload_audio(audio: UploadFile = File(...)):
     try:
         # Generate unique filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        file_extension = audio.filename.split(".")[-1]
-        filename = f"recording_{timestamp}.{file_extension}"
-        file_path = UPLOAD_DIR / filename
         
-        # Save the file
-        with file_path.open("wb") as buffer:
+        # Save original file temporarily
+        temp_filename = f"temp_{timestamp}.webm"
+        temp_path = UPLOAD_DIR / temp_filename
+        
+        with temp_path.open("wb") as buffer:
             shutil.copyfileobj(audio.file, buffer)
         
-        return {
-            "success": True,
-            "filename": filename,
-            "size": file_path.stat().st_size,
-            "path": str(file_path)
-        }
+        # Convert to MP3 using ffmpeg
+        mp3_filename = f"recording_{timestamp}.mp3"
+        mp3_path = UPLOAD_DIR / mp3_filename
+        
+        # Run ffmpeg conversion
+        result = subprocess.run([
+            "ffmpeg", "-i", str(temp_path),
+            "-vn",  # No video
+            "-ar", "44100",  # Audio sample rate
+            "-ac", "2",  # Audio channels
+            "-b:a", "192k",  # Audio bitrate
+            str(mp3_path)
+        ], capture_output=True, text=True)
+        
+        # Remove temporary file
+        if temp_path.exists():
+            os.remove(temp_path)
+        
+        if result.returncode == 0:
+            return {
+                "success": True,
+                "filename": mp3_filename,
+                "size": mp3_path.stat().st_size,
+                "path": str(mp3_path)
+            }
+        else:
+            return {
+                "success": False,
+                "error": f"FFmpeg conversion failed: {result.stderr}"
+            }
     except Exception as e:
         return {
             "success": False,
