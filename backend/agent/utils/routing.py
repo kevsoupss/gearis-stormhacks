@@ -1,4 +1,4 @@
-from state import AgentState
+from ..state import AgentState
 
 def route_after_input(state: AgentState) -> str:
     """
