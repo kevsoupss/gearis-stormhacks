@@ -1,6 +1,4 @@
-from .graph import save_graph_visualization
-
-load_dotenv()
+from graph import save_graph_visualization
 
 
 # def main():

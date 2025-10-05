@@ -1,18 +1,19 @@
 from langgraph.graph import StateGraph, END
 
 from .state import AgentState
-from .nodes import agent_node, tool_node, should_continue
+from .nodes import agent_node, tool_node, output_formatter_node, should_format_output
 
 
 def create_graph():
     """
-    Creates a ReAct agent graph with tool calling loop
+    Creates a ReAct agent graph with tool calling loop and output formatting
     """
     workflow = StateGraph(AgentState)
     
     # Add nodes
-    workflow.add_node("agent", agent_node)  # The thinking/planning node
-    workflow.add_node("tools", tool_node)   # Tool execution node
+    workflow.add_node("agent", agent_node)
+    workflow.add_node("tools", tool_node)
+    workflow.add_node("format_output", output_formatter_node)
     
     # Set entry point
     workflow.set_entry_point("agent")
@@ -20,15 +21,19 @@ def create_graph():
     # Add conditional edges from agent
     workflow.add_conditional_edges(
         "agent",
-        should_continue,
+        should_format_output,  # Use the new routing function
         {   
-            "tools": "tools",  # If tools needed, execute them
-            "end": END         # If done, finish
+            "tools": "tools",
+            "format_output": "format_output",
+            "end": END
         }
     )
     
-    # After tools execute, go back to agent to see results
+    # After tools execute, go back to agent
     workflow.add_edge("tools", "agent")
+    
+    # After formatting, we're done
+    workflow.add_edge("format_output", END)
     
     return workflow.compile()
 

@@ -13,6 +13,7 @@ logger = logging.getLogger("uvicorn")
 elevenlabs = ElevenLabsService()
 chroma_service = ChromaService.get_instance()
 graph = create_graph()
+# save_graph_visualization()
 conversation_history = []
 
 # CORS middleware to allow requests from Tauri app

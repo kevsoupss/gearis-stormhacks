@@ -39,11 +39,11 @@
         "windows": [
             {
                 "title": "frontend",
-                "width": 400,
-                "minHeight": 100,
+                "minWidth": 400,
+                "minHeight": 200,
                 "decorations": false,
                 "transparent": true,
-                "resizable": false,
+                "resizable": true,
                 "alwaysOnTop": true
             }
         ],

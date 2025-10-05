@@ -45,7 +45,7 @@ fn main() {
             let window = app.get_window("main").unwrap();
             
             // Set window size first
-            window.set_size(tauri::LogicalSize::new(400, 200))?;
+            window.set_size(tauri::LogicalSize::new(400, 250))?;
             window.set_decorations(false)?;
 
             // Get screen size
@@ -54,7 +54,7 @@ fn main() {
             
             // Position at top right
             let x = (screen_size.width as i32)/2-400; // 20px padding from right
-            let y = 30; // 20px from top
+            let y = 0; // 20px from top
             
             window.set_position(tauri::PhysicalPosition::new(x, y))?;
             
