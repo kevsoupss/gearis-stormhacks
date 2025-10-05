@@ -21,7 +21,7 @@ def create_graph():
     workflow.add_conditional_edges(
         "agent",
         should_continue,
-        {
+        {   
             "tools": "tools",  # If tools needed, execute them
             "end": END         # If done, finish
         }

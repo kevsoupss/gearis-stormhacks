@@ -43,6 +43,7 @@ IMPORTANT: If the user has already selected an app (selected_app is set), assume
 are for that app unless they explicitly mention a different app. For example:
 - If selected_app is "Discord" and user says "send a message", open Discord and send it
 - If selected_app is "Notes" and user says "write this down", open Notes and write it down
+- If selected_app is "Gmail" and user says "open recent email", open Email and click it
 
 If you cannot do any of the actions being asked, please respond with "I'm sorry, I cannot assist with that request."
 
@@ -79,4 +80,10 @@ def should_continue(state: AgentState) -> str:
         return "tools"
     
     # Otherwise, end
+    return "end"
+
+def should_open_my_presentation(state: AgentState) -> str:
+    last_msg = state["messages"][-1]
+    if "my slide presentation" in last_msg.content.lower():
+        return "open_my_presentation"
     return "end"
