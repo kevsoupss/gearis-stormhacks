@@ -5,6 +5,7 @@ from .system_toolkit import SystemControlToolkit
 from .browser_toolkit import BrowserToolkit
 from .spotify_toolkit import SpotifyToolkit
 from .youtube_toolkit import YouTubeToolkit
+from .discord_toolkit import DiscordToolkit
 
 # Get all tools from all toolkits
 def get_all_tools() -> List[BaseTool]:
@@ -13,7 +14,8 @@ def get_all_tools() -> List[BaseTool]:
         SystemControlToolkit.get_tools() +
         BrowserToolkit.get_tools() +
         SpotifyToolkit.get_tools() +
-        YouTubeToolkit.get_tools()
+        YouTubeToolkit.get_tools() +
+        DiscordToolkit.get_tools()
     )
 
 # # Or get specific toolkits
