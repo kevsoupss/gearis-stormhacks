@@ -34,7 +34,8 @@
                 "height": 100,
                 "decorations": false,
                 "transparent": true,
-                "resizable": false
+                "resizable": false,
+                "alwaysOnTop": true
             }
         ],
         "security": {

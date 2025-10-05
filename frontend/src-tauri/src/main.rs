@@ -16,7 +16,7 @@ fn main() {
             let window = app.get_window("main").unwrap();
             
             // Set window size first
-            window.set_size(tauri::LogicalSize::new(400, 100))?;
+            window.set_size(tauri::LogicalSize::new(400, 200))?;
             window.set_decorations(false)?;
 
             // Get screen size
