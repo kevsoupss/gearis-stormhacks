@@ -4,6 +4,10 @@ import pvporcupine
 import webrtcvad
 import requests
 
+from dotenv import load_dotenv
+load_dotenv()
+
+pico_api_key = os.getenv("PICO_API_KEY")
 WAKEWORDS = ["jarvis"]  # built-in keywords: "picovoice", "bumblebee", etc.
 SAMPLE_RATE = 16000
 FRAME_LENGTH = 512      # Porcupine expects 512 samples @16kHz (~32ms)
@@ -41,7 +45,7 @@ def transcribe_stub(path: str) -> str:
 def main():
     porcupine = pvporcupine.create(
         keywords=WAKEWORDS,
-        access_key="D55lq6z5Z8Q/xoev3oNmBsboOTLZ89jFhT5VAJaCf+M1XeBIngWAOQ=="
+        access_key=pico_api_key,
     )
 
     # --- Audio stream set-up (16k, int16, mono) ---
