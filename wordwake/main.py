@@ -22,7 +22,7 @@ def save_wav(raw_bytes: bytes, path: str, samplerate=SAMPLE_RATE):
         wf.setframerate(samplerate)
         wf.writeframes(raw_bytes)
         files = {"audio": ("utterance.wav", open("utterance.wav", "rb"), "audio/wav")}
-        response = requests.post("http://localhost:8000/api/upload-audio", files=files)
+        response = requests.post("http://localhost:8000/api/upload-audio?toggle_voice=true", files=files)
         print("Server response:", response.status_code, response.text)
 
 def simple_intent_router(text: str):
