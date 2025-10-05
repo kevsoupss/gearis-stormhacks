@@ -68,7 +68,19 @@ def on_shutdown():
 def ping():
     return {"message": "pong"}
 
-# Audio upload endpoint
+# WebSocket endpoint
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            # Keep connection alive and listen for any client messages
+            data = await websocket.receive_text()
+            logger.info(f"Received from client: {data}")
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+# Audio upload endpoint with WebSocket streaming
 @app.post("/api/upload-audio")
 async def upload_audio(audio: UploadFile = File(...)):
     global conversation_history
