@@ -18,7 +18,7 @@ def get_all_tools() -> List[BaseTool]:
         SpotifyToolkit.get_tools() +
         YouTubeToolkit.get_tools() +
         DiscordToolkit.get_tools() +
-        CoolToolkit.get_tools()
+        CoolToolkit.get_tools() + 
         RagTool.get_tool()
     )
 
