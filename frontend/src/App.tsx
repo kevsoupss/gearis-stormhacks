@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import "./App.css";
-import { Command } from '@tauri-apps/api/shell';
+import { Command } from "@tauri-apps/api/shell";
+import { ToolsCalled } from "./components/ToolsCalled";
 
 function App() {
     const [isRecording, setIsRecording] = useState(false);
@@ -9,21 +10,21 @@ function App() {
     const audioChunksRef = useRef<Blob[]>([]);
 
     async function sendNotificationWithDebug(title: string, body: string) {
-      console.log("🔔 Attempting to send notification:", { title, body });
-      
-      try {
-        // Use AppleScript instead of Tauri notification API
-        const timestamp = Date.now();
-        const script = `display notification "${body}" with title "${title} - ${timestamp}" sound name "Glass"`;
-        const command = new Command('osascript', ['-e', script]);
-        await command.execute();
-        
-        console.log("✅ Notification sent via AppleScript");
-        setMicStatus(prev => prev + " [Notification sent]");
-      } catch (error) {
-        console.error("❌ Notification failed:", error);
-        setMicStatus(prev => prev + " [Notification failed]");
-      }
+        console.log("🔔 Attempting to send notification:", { title, body });
+
+        try {
+            // Use AppleScript instead of Tauri notification API
+            const timestamp = Date.now();
+            const script = `display notification "${body}" with title "${title} - ${timestamp}" sound name "Glass"`;
+            const command = new Command("osascript", ["-e", script]);
+            await command.execute();
+
+            console.log("✅ Notification sent via AppleScript");
+            setMicStatus((prev) => prev + " [Notification sent]");
+        } catch (error) {
+            console.error("❌ Notification failed:", error);
+            setMicStatus((prev) => prev + " [Notification failed]");
+        }
     }
 
     async function sendAudioToBackend(audioBlob: Blob) {
@@ -99,6 +100,8 @@ function App() {
                     <h1 className="title">Voice Recorder</h1>
                     <p className="subtitle">Record audio and save as MP3</p>
                 </header>
+
+                <ToolsCalled />
 
                 <div className="recorder-card">
                     <div className="status-indicator">
