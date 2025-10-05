@@ -6,9 +6,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pathlib import Path
 from datetime import datetime
+from agent.graph import create_graph
+import logging
+from langchain_core.messages import HumanMessage
 
-app = FastAPI(title="Tauri + FastAPI Example")
+app = FastAPI()
+logger = logging.getLogger("uvicorn")
 elevenlabs = ElevenLabsService()
+graph = create_graph()
+conversation_history = []
+
 
 # CORS middleware to allow requests from Tauri app
 app.add_middleware(
@@ -56,16 +63,30 @@ def create_user(user: User):
 # Audio upload endpoint
 @app.post("/api/upload-audio")
 async def upload_audio(audio: UploadFile = File(...)):
+    global conversation_history
     try:
-        audio_raw = BytesIO(audio.file.read())
+        audio_bytes = await audio.read()
+        audio_raw = BytesIO(audio_bytes)
+        logger.info("Audio bytes read: %d bytes", len(audio_bytes))
+        
         stt_response = elevenlabs.stt(audio_raw)
-        return {
-            "transcript": stt_response.text
-        }
+        logger.info(f"STT response: {stt_response}")
+        
+        conversation_history.append(HumanMessage(content=stt_response.text))
+        
+        # Run the agent - it will loop through tools as needed
+        result = graph.invoke({"messages": conversation_history})
+        
+        # Update history with all messages (including tool calls/results)
+        conversation_history = result["messages"]
+        
+        # Print the final response
+        final_message = result["messages"][-1]
+        logger.info(f"Final message: {final_message.content}")
+        
+        return {"transcript": stt_response.text}
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        logger.exception("Error during audio upload")
+        return {"success": False, "error": str(e)}
     finally:
-        audio.file.close()
+        await audio.close()

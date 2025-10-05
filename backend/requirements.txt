@@ -7,3 +7,11 @@ aiohttp
 requests
 elevenlabs==2.16
 python-dotenv
+
+langgraph
+langchain-core
+langchain_openai
+dotenv
+langchain-google-genai
+google-generativeai
+pyautogui

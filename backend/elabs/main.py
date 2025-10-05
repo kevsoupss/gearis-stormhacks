@@ -11,6 +11,7 @@ class ElevenLabsService:
         self.client = ElevenLabs(api_key=os.getenv("ELEVENLABS_KEY"))
     
     def stt(self, audio_data):
+        print(self.client.speech_to_text)
         transcription = self.client.speech_to_text.convert(
             file=audio_data,
             model_id="scribe_v1", # Model to use, for now only "scribe_v1" is supported
@@ -29,6 +30,6 @@ class ElevenLabsService:
 
 if __name__ == "__main__":
     client = ElevenLabsService()
-    print(client.stt(client.mp3_to_bytes("elevenlabs/test.mp3")))
+    print(client.stt(client.mp3_to_bytes("elabs/test.mp3")))
 
     

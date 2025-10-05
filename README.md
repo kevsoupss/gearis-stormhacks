@@ -5,6 +5,7 @@
 `npm run tauri dev`
 
 ## Backend
+
 `cd backend` \
 `python3 -m venv venv` \
 `source venv/bin/activate` \
