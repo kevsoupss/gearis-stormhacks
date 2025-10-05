@@ -1,3 +1,4 @@
+import logging
 import subprocess
 import time
 from typing import List
@@ -18,6 +19,7 @@ class SystemControlToolkit:
             Args:
                 app_name: Name of the application (e.g., 'Safari', 'Chrome', 'Notion')
             """
+            logging.info("calling open macos app tool")
             try:
                 result = subprocess.run(
                     ['open', '-a', app_name],
@@ -41,6 +43,7 @@ class SystemControlToolkit:
             Args:
                 app_name: Name of the application to close
             """
+            logging.info("calling close macos app tool")
             try:
                 subprocess.run(['osascript', '-e', f'quit app "{app_name}"'], check=True)
                 return f"Successfully closed {app_name}"
@@ -55,6 +58,7 @@ class SystemControlToolkit:
             Args:
                 level: Volume level from 0-100
             """
+            logging.info("calling set volume tool")
             try:
                 level = max(0, min(100, level))
                 subprocess.run(['osascript', '-e', f'set volume output volume {level}'], check=True)
@@ -70,6 +74,7 @@ class SystemControlToolkit:
             Args:
                 change: Amount to change (+10 for increase, -10 for decrease)
             """
+            logging.info("calling adjust volume tool")
             try:
                 result = subprocess.run(
                     ['osascript', '-e', 'output volume of (get volume settings)'],

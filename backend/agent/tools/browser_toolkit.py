@@ -1,3 +1,4 @@
+import logging
 import subprocess
 import time
 from typing import List
@@ -22,6 +23,7 @@ class BrowserToolkit:
                 query: Search query text
                 browser: Browser name (Chrome, Safari, Firefox, Arc, Brave, Edge)
             """
+            logging.info("calling browser search tool")
             try:
                 actual_browser = normalize_app_name(browser)
                 import urllib.parse
@@ -44,6 +46,7 @@ class BrowserToolkit:
                 url: Full URL to open
                 browser: Browser name (Chrome, Safari, Firefox, Arc, Brave, Edge)
             """
+            logging.info("calling open url tool")
             try:
                 actual_browser = normalize_app_name(browser)
                 subprocess.run(['open', '-a', actual_browser, url], check=True)
@@ -59,6 +62,7 @@ class BrowserToolkit:
             Args:
                 text: Text to type
             """
+            logging.info("calling type text tool")
             try:
                 time.sleep(0.5)
                 pyautogui.write(text, interval=0.05)
@@ -74,6 +78,7 @@ class BrowserToolkit:
             Args:
                 key: Key to press (e.g., 'enter', 'command+s', 'tab')
             """
+            logging.info("calling press key tool")
             try:
                 if '+' in key:
                     keys = key.split('+')
@@ -93,6 +98,7 @@ class BrowserToolkit:
                 title: Note title
                 content: Note content
             """
+            logging.info("calling create note tool")
             try:
                 subprocess.run(['open', '-a', 'Notes'], check=True)
                 time.sleep(1)
