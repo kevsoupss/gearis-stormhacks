@@ -8,6 +8,7 @@ from .youtube_toolkit import YouTubeToolkit
 from .discord_toolkit import DiscordToolkit
 from .cool_toolkit import CoolToolkit
 from .rag import RagTool
+from .tauri_toolkit import TauriControlToolkit
 
 # Get all tools from all toolkits
 def get_all_tools() -> List[BaseTool]:
@@ -19,7 +20,8 @@ def get_all_tools() -> List[BaseTool]:
         YouTubeToolkit.get_tools() +
         DiscordToolkit.get_tools() +
         CoolToolkit.get_tools() + 
-        RagTool.get_tool()
+        RagTool.get_tool() +
+        TauriControlToolkit.get_tools()
     )
 
 # # Or get specific toolkits

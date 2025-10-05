@@ -1,24 +1,17 @@
 import { useEffect, useRef, useState } from "react";
+import { appWindow } from "@tauri-apps/api/window";
 
 interface AgentEvent {
-    type: "stt_start" | "transcript" | "agent_start" | "tool_call_start" | "tool_call_end" | "agent_complete" | "error";
-    data: any;
-}
-
-interface AgentAction {
-    id: string;
-    type: "tool_call" | "tool_result" | "agent_response";
-    tool?: string;
-    args?: any;
-    result?: string;
-    response?: string;
-    timestamp: number;
+    type: "status";
+    data: {
+        message: string;
+        value: boolean | undefined;
+    };
 }
 
 export function useAgentWebSocket(url: string = "ws://localhost:8000/ws") {
-    const [actions, setActions] = useState<AgentAction[]>([]);
     const [isConnected, setIsConnected] = useState(false);
-    const [transcript, setTranscript] = useState("");
+    const [statusMessage, setStatusMessage] = useState("Ready");
     const [error, setError] = useState<string>("");
     const wsRef = useRef<WebSocket | null>(null);
 
@@ -31,93 +24,45 @@ export function useAgentWebSocket(url: string = "ws://localhost:8000/ws") {
             console.log("✅ WebSocket connected");
             setIsConnected(true);
             setError("");
+            setStatusMessage("Ready");
         };
 
-        ws.onmessage = (event) => {
+        ws.onmessage = async (event) => {
             console.log("📨 Raw message received:", event.data);
             try {
                 const message: AgentEvent = JSON.parse(event.data);
                 console.log("📦 Parsed event:", message.type, message.data);
 
-                switch (message.type) {
-                    case "stt_start":
-                        console.log("🎤 STT started");
-                        setActions([]);
-                        setTranscript("");
-                        break;
+                if (message.type === "status") {
+                    setStatusMessage(message.data.message);
+                    setError("");
+                } else if (message.type === "set_hidden") {
+                    console.log(`👁️ Setting window hidden: ${message.data.value}`);
 
-                    case "transcript":
-                        console.log("📝 Transcript:", message.data.text);
-                        setTranscript(message.data.text);
-                        break;
-
-                    case "agent_start":
-                        console.log("🤖 Agent started");
-                        setActions([]);
-                        break;
-
-                    case "tool_call_start":
-                        console.log("🔧 Tool call started:", message.data.tool);
-                        setActions((prev) => [
-                            ...prev,
-                            {
-                                id: message.data.id || `${Date.now()}-${Math.random()}`,
-                                type: "tool_call",
-                                tool: message.data.tool,
-                                args: message.data.args,
-                                timestamp: Date.now(),
-                            },
-                        ]);
-                        break;
-
-                    case "tool_call_end":
-                        console.log("✅ Tool call ended:", message.data.tool);
-                        setActions((prev) => [
-                            ...prev,
-                            {
-                                id: `${Date.now()}-${Math.random()}`,
-                                type: "tool_result",
-                                tool: message.data.tool,
-                                result: message.data.output,
-                                timestamp: Date.now(),
-                            },
-                        ]);
-                        break;
-
-                    case "agent_complete":
-                        console.log("🎉 Agent complete");
-                        setActions((prev) => [
-                            ...prev,
-                            {
-                                id: `${Date.now()}-${Math.random()}`,
-                                type: "agent_response",
-                                response: message.data.response,
-                                timestamp: Date.now(),
-                            },
-                        ]);
-                        break;
-
-                    case "error":
-                        console.error("❌ Agent error:", message.data.message);
-                        setError(message.data.message);
-                        break;
-
-                    default:
-                        console.warn("⚠️ Unknown event type:", message);
+                    if (message.data.value) {
+                        await appWindow.hide();
+                        console.log(`✅ Window hidden`);
+                    } else {
+                        await appWindow.show();
+                        console.log(`✅ Window shown`);
+                    }
                 }
             } catch (err) {
                 console.error("❌ Error parsing message:", err);
+                setError("Failed to parse message");
             }
         };
 
         ws.onerror = (error) => {
             console.error("❌ WebSocket error:", error);
-            setError("WebSocket connection error");
+            setError("Connection error");
+            setStatusMessage("Connection error");
         };
 
         ws.onclose = (event) => {
             console.log("🔌 WebSocket disconnected:", event.code, event.reason);
             setIsConnected(false);
+            setStatusMessage("Disconnected");
         };
 
         return () => {
@@ -126,5 +71,5 @@ export function useAgentWebSocket(url: string = "ws://localhost:8000/ws") {
         };
     }, [url]);
 
-    return { actions, isConnected, transcript, error };
+    return { isConnected, statusMessage, error };
 }
