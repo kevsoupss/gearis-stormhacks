@@ -1,4 +1,9 @@
 fastapi
 uvicorn[standard]
-pydantic
 python-multipart
+pydantic
+typing-extensions
+aiohttp
+requests
+elevenlabs==2.16
+python-dotenv

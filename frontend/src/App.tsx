@@ -1,13 +1,12 @@
 import { invoke } from "@tauri-apps/api/tauri";
 import { useRef, useState } from "react";
 import "./App.css";
-import reactLogo from "./assets/react.svg";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-  const [micStatus, setMicStatus] = useState("Not started");
+  const [micStatus, setMicStatus] = useState("Ready to record");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
@@ -25,13 +24,13 @@ function App() {
       
       if (response.ok) {
         const result = await response.json();
-        setMicStatus(`Upload successful! ${JSON.stringify(result)}`);
+        setMicStatus(`✓ Text: ${result.transcript}`);
       } else {
-        setMicStatus(`Upload failed: ${response.statusText}`);
+        setMicStatus(`✗ Upload failed: ${response.statusText}`);
       }
     } catch (error) {
       console.error("Error uploading audio:", error);
-      setMicStatus(`Upload error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setMicStatus(`✗ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -42,7 +41,6 @@ function App() {
   async function startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setMicStatus("Microphone access granted");
       
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
@@ -56,21 +54,17 @@ function App() {
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        setMicStatus(`Recording complete (${audioBlob.size} bytes)`);
         
-        // Stop all tracks to release microphone
         stream.getTracks().forEach(track => track.stop());
-        
-        // Send to backend
         await sendAudioToBackend(audioBlob);
       };
 
       mediaRecorder.start();
       setIsRecording(true);
-      setMicStatus("Recording...");
+      setMicStatus("🎤 Recording...");
     } catch (err) {
       console.error("Microphone access denied:", err);
-      setMicStatus(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setMicStatus(`✗ ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
   }
 
@@ -82,58 +76,48 @@ function App() {
   }
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <div className="app-container">
+      <div className="content-wrapper">
+        <header className="header">
+          <h1 className="title">Voice Recorder</h1>
+          <p className="subtitle">Record audio and save as MP3</p>
+        </header>
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
+        <div className="recorder-card">
+          <div className="status-indicator">
+            <div className={`pulse-dot ${isRecording ? 'recording' : ''}`}></div>
+            <span className="status-text">{micStatus}</span>
+          </div>
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-
-      <div className="row" style={{ marginTop: "2rem" }}>
-        <h2>Microphone Test</h2>
-        <div>
-          <button 
-            onClick={startRecording} 
-            disabled={isRecording}
-            style={{ marginRight: "10px" }}
-          >
-            Start Recording
-          </button>
-          <button 
-            onClick={stopRecording} 
-            disabled={!isRecording}
-          >
-            Stop Recording
-          </button>
+          <div className="controls">
+            <button 
+              onClick={startRecording} 
+              disabled={isRecording}
+              className={`btn btn-primary ${isRecording ? 'disabled' : ''}`}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+              Start Recording
+            </button>
+            
+            <button 
+              onClick={stopRecording} 
+              disabled={!isRecording}
+              className={`btn btn-secondary ${!isRecording ? 'disabled' : ''}`}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+              </svg>
+              Stop Recording
+            </button>
+          </div>
         </div>
-        <p>Status: {micStatus}</p>
       </div>
-    </main>
+    </div>
   );
 }
 
