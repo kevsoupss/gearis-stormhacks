@@ -1,15 +1,84 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/tauri";
+import { useRef, useState } from "react";
 import "./App.css";
+import reactLogo from "./assets/react.svg";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [micStatus, setMicStatus] = useState("Not started");
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  async function sendAudioToBackend(audioBlob: Blob) {
+    try {
+      setMicStatus("Uploading to server...");
+      
+      const formData = new FormData();
+      formData.append("audio", audioBlob, "recording.webm");
+      
+      const response = await fetch("http://localhost:8000/api/upload-audio", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setMicStatus(`Upload successful! ${JSON.stringify(result)}`);
+      } else {
+        setMicStatus(`Upload failed: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error("Error uploading audio:", error);
+      setMicStatus(`Upload error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
 
   async function greet() {
-    // Learn more about Tauri commands at https://v1.tauri.app/v1/guides/features/command
     setGreetMsg(await invoke("greet", { name }));
+  }
+
+  async function startRecording() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      setMicStatus("Microphone access granted");
+      
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        setMicStatus(`Recording complete (${audioBlob.size} bytes)`);
+        
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Send to backend
+        await sendAudioToBackend(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setMicStatus("Recording...");
+    } catch (err) {
+      console.error("Microphone access denied:", err);
+      setMicStatus(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
   }
 
   return (
@@ -44,6 +113,26 @@ function App() {
         <button type="submit">Greet</button>
       </form>
       <p>{greetMsg}</p>
+
+      <div className="row" style={{ marginTop: "2rem" }}>
+        <h2>Microphone Test</h2>
+        <div>
+          <button 
+            onClick={startRecording} 
+            disabled={isRecording}
+            style={{ marginRight: "10px" }}
+          >
+            Start Recording
+          </button>
+          <button 
+            onClick={stopRecording} 
+            disabled={!isRecording}
+          >
+            Stop Recording
+          </button>
+        </div>
+        <p>Status: {micStatus}</p>
+      </div>
     </main>
   );
 }
