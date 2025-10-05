@@ -2,9 +2,17 @@ from io import BytesIO
 from dotenv import load_dotenv
 from elevenlabs.client import ElevenLabs
 from elevenlabs.play import play
+import logging
 import os
 
 load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,  # Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 class ElevenLabsService:
     def __init__(self):
@@ -19,6 +27,19 @@ class ElevenLabsService:
             diarize=True, # Whether to annotate who is speaking
         )
         return transcription
+        logger.info("Starting speech-to-text conversion...")
+        try:
+            transcription = self.client.speech_to_text.convert(
+                file=audio_data,
+                model_id="scribe_v1",  # Supported model
+                language_code="eng",
+                diarize=True
+            )
+            logger.info("Transcription completed successfully.")
+            return transcription
+        except Exception as e:
+            logger.exception("Error during speech-to-text conversion.")
+            raise e
 
     def tts(self):
         pass

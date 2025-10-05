@@ -1,14 +1,30 @@
-import { invoke } from "@tauri-apps/api/tauri";
 import { useRef, useState } from "react";
 import "./App.css";
+import { Command } from '@tauri-apps/api/shell';
 
 function App() {
-    const [greetMsg, setGreetMsg] = useState("");
-    const [name, setName] = useState("");
     const [isRecording, setIsRecording] = useState(false);
     const [micStatus, setMicStatus] = useState("Ready to record");
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
+
+    async function sendNotificationWithDebug(title: string, body: string) {
+      console.log("🔔 Attempting to send notification:", { title, body });
+      
+      try {
+        // Use AppleScript instead of Tauri notification API
+        const timestamp = Date.now();
+        const script = `display notification "${body}" with title "${title} - ${timestamp}" sound name "Glass"`;
+        const command = new Command('osascript', ['-e', script]);
+        await command.execute();
+        
+        console.log("✅ Notification sent via AppleScript");
+        setMicStatus(prev => prev + " [Notification sent]");
+      } catch (error) {
+        console.error("❌ Notification failed:", error);
+        setMicStatus(prev => prev + " [Notification failed]");
+      }
+    }
 
     async function sendAudioToBackend(audioBlob: Blob) {
         try {
@@ -28,17 +44,15 @@ function App() {
                 const result = await response.json();
                 console.log(result);
                 setMicStatus(`✓ Text: ${result.transcript}`);
+                await sendNotificationWithDebug("Success", "Response has been set");
             } else {
                 setMicStatus(`✗ Upload failed: ${response.statusText}`);
             }
         } catch (error) {
             console.error("Error uploading audio:", error);
             setMicStatus(`✗ Error: ${error instanceof Error ? error.message : "Unknown error"}`);
+            await sendNotificationWithDebug("Failure", "Response has not be recorded");
         }
-    }
-
-    async function greet() {
-        setGreetMsg(await invoke("greet", { name }));
     }
 
     async function startRecording() {
