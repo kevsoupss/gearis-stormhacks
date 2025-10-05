@@ -80,7 +80,7 @@ def get_tool_complete_text(tool_name: str) -> str:
 
 # Audio upload endpoint with WebSocket streaming
 @app.post("/api/upload-audio")
-async def upload_audio(audio: UploadFile = File(...)):
+async def upload_audio(audio: UploadFile = File(...), toggle_voice: str = ""):
     global conversation_history
     try:
         audio_bytes = await audio.read()
@@ -139,15 +139,17 @@ async def upload_audio(audio: UploadFile = File(...)):
                 final_message = result["messages"][-1]
                 
                 logger.info(f"Final message: {final_message.content}")
+                if toggle_voice == 'true':
+                    elevenlabs.tts(final_message.content)
                 
-                # Create summary of actions
-                if tools_used:
-                    summary = "Task completed. " + ", ".join([t["action"] for t in tools_used])
-                else:
-                    summary = "Task completed"
+                # # Create summary of actions
+                # if tools_used:
+                #     summary = "Task completed. " + ", ".join([t["action"] for t in tools_used])
+                # else:
+                #     summary = "Task completed"
                 
                 await manager.send_event("status", {
-                    "message": summary
+                    "message": final_message.content 
                 })
         
         return {"transcript": stt_response.text, "success": True}

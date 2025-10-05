@@ -19,30 +19,29 @@ class ElevenLabsService:
         self.client = ElevenLabs(api_key=os.getenv("ELEVENLABS_KEY"))
     
     def stt(self, audio_data):
-        print(self.client.speech_to_text)
+        audio = bytearray()
+        try:
+            for chunk in self.client.audio_isolation.convert(audio=audio_data):
+                audio.extend(chunk)
+            audio = BytesIO(audio)
+        except:
+            audio = audio_data
         transcription = self.client.speech_to_text.convert(
-            file=audio_data,
+            file=audio,
             model_id="scribe_v1", # Model to use, for now only "scribe_v1" is supported
             language_code="eng", # Language of the audio file. If set to None, the model will detect the language automatically.
             diarize=True, # Whether to annotate who is speaking
         )
         return transcription
-        logger.info("Starting speech-to-text conversion...")
-        try:
-            transcription = self.client.speech_to_text.convert(
-                file=audio_data,
-                model_id="scribe_v1",  # Supported model
-                language_code="eng",
-                diarize=True
-            )
-            logger.info("Transcription completed successfully.")
-            return transcription
-        except Exception as e:
-            logger.exception("Error during speech-to-text conversion.")
-            raise e
 
-    def tts(self):
-        pass
+    def tts(self, text):
+        audio = self.client.text_to_speech.convert(
+            text=text,
+            voice_id="iP95p4xoKVk53GoZ742B",
+            model_id="eleven_flash_v2_5",
+            output_format="mp3_44100_128",
+        ) 
+        play(audio)
 
     def mp3_to_bytes(self, path):
         with open(path, "rb") as f:
