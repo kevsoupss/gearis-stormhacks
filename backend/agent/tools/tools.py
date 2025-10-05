@@ -7,6 +7,7 @@ from .spotify_toolkit import SpotifyToolkit
 from .youtube_toolkit import YouTubeToolkit
 from .discord_toolkit import DiscordToolkit
 from .cool_toolkit import CoolToolkit
+from .camera_toolkit import CameraToolkit
 from .rag import RagTool
 from .tauri_toolkit import TauriControlToolkit
 
@@ -21,7 +22,8 @@ def get_all_tools() -> List[BaseTool]:
         DiscordToolkit.get_tools() +
         CoolToolkit.get_tools() + 
         RagTool.get_tool() +
-        TauriControlToolkit.get_tools()
+        TauriControlToolkit.get_tools() +
+        CameraToolkit.get_tools()
     )
 
 # # Or get specific toolkits
