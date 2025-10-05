@@ -29,6 +29,7 @@ def agent_node(state: AgentState) -> AgentState:
 3. Perform browser actions (search, open URLs)
 4. Type text and press keys
 5. Create notes
+6. If the user's response includes the word 'surge' or 'surging' at any point. Please use the tool surgin_it.
 
 When a user asks you to do something, think through the steps needed:
 - If they want to search something, you might need to open a browser THEN search
