@@ -8,7 +8,7 @@ function App() {
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioChunksRef = useRef<Blob[]>([]);
 
-    const { actions, isConnected, transcript, error } = useAgentWebSocket();
+    const { isConnected, statusMessage, error } = useAgentWebSocket();
 
     async function sendNotificationWithDebug(title: string, body: string) {
         console.log("🔔 Attempting to send notification:", { title, body });
@@ -38,11 +38,11 @@ function App() {
             if (response.ok) {
                 const result = await response.json();
                 console.log(result);
-                await sendNotificationWithDebug("Success", "Response has been set");
+                await sendNotificationWithDebug("Success", "Task completed");
             }
         } catch (error) {
             console.error("Error uploading audio:", error);
-            await sendNotificationWithDebug("Failure", "Response has not be recorded");
+            await sendNotificationWithDebug("Failure", "Request failed");
         }
     }
 
@@ -80,26 +80,11 @@ function App() {
         }
     }
 
-    // Determine status text based on state
     const getStatusText = () => {
         if (error) return `Error: ${error}`;
         if (!isConnected) return "Disconnected";
         if (isRecording) return "Recording...";
-        if (transcript) return transcript;
-
-        // Show latest action if available
-        if (actions.length > 0) {
-            const lastAction = actions[actions.length - 1];
-            if (lastAction.type === "tool_call") {
-                return `🔧 ${lastAction.tool}`;
-            } else if (lastAction.type === "tool_result") {
-                return `✅ ${lastAction.tool}`;
-            } else if (lastAction.type === "agent_response") {
-                return lastAction.response || "Complete";
-            }
-        }
-
-        return "Ready";
+        return statusMessage;
     };
 
     return (

@@ -4,6 +4,7 @@ from typing import List
 from langchain_core.tools import tool, BaseTool
 import pyautogui
 import pyperclip
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from ..utils.mapping import normalize_app_name
 
@@ -41,20 +42,35 @@ class GoogleToolkit:
                 return f"Error opening next email: {e}"
         
         @tool
-        def copy_opened_email_body():
+        def copy_opened_email_body() -> str:
             """
-            Retrieves all data from opened email using keyboard shortcusts.
-            Returns a human-readable output of the email contents.
+            Copies the body of the currently opened Gmail email and summarizes it.
+            Requires Gmail keyboard shortcuts enabled and the email window focused.
             """
-            # assume you already opened the email and it is focused
-            time.sleep(0.3)
-            # Gmail: focus the message content — often clicking once or using 'c'/'v' may vary
-            # Use keyboard select-all and copy
-            pyautogui.hotkey('command', 'a')   # mac: select all visible text in focused area
-            time.sleep(0.1)
-            pyautogui.hotkey('command', 'c')
-            time.sleep(0.2)
-            return pyperclip.paste()
+            try:
+                # Assume Gmail tab is open and focused
+                time.sleep(0.3)
+
+                # Select and copy all text
+                pyautogui.hotkey('command', 'a')
+                time.sleep(0.1)
+                pyautogui.hotkey('command', 'c')
+                time.sleep(0.3)
+
+                # Read from clipboard
+                email_text = pyperclip.paste().strip()
+                if not email_text:
+                    return "⚠️ No text detected — make sure the email is open and focused."
+
+                # Summarize with Gemini
+                llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
+                prompt = f"Summarize this email in a concise, professional way:\n\n{email_text}"
+                result = llm.invoke(prompt)
+
+                return f"📧 Email summary:\n\n{result.content}"
+
+            except Exception as e:
+                return f"❌ An error occurred: {str(e)}"
         
         @tool
         def open_previous_email() -> str:

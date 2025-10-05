@@ -3,13 +3,10 @@ from storage.main import ChromaService
 from elabs.main import ElevenLabsService
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from pathlib import Path
-from datetime import datetime
 from agent.graph import create_graph
 import logging
 from langchain_core.messages import HumanMessage
-from typing import List
+from agent.utils.connection_manager import manager
 
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
@@ -17,32 +14,6 @@ elevenlabs = ElevenLabsService()
 chroma_service = ChromaService.get_instance()
 graph = create_graph()
 conversation_history = []
-
-# WebSocket Connection Manager
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
-
-    async def connect(self, websocket: WebSocket):
-        await websocket.accept()
-        self.active_connections.append(websocket)
-        logger.info("WebSocket client connected")
-
-    def disconnect(self, websocket: WebSocket):
-        self.active_connections.remove(websocket)
-        logger.info("WebSocket client disconnected")
-
-    async def send_event(self, event_type: str, data: dict):
-        """Send event to all connected clients"""
-        message = {"type": event_type, "data": data}
-        for connection in self.active_connections:
-            try:
-                await connection.send_json(message)
-                logger.info(f"Sent event: {event_type}")
-            except Exception as e:
-                logger.error(f"Error sending to client: {e}")
-
-manager = ConnectionManager()
 
 # CORS middleware to allow requests from Tauri app
 app.add_middleware(
@@ -74,11 +45,38 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         while True:
-            # Keep connection alive and listen for any client messages
             data = await websocket.receive_text()
             logger.info(f"Received from client: {data}")
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+
+def get_tool_action_text(tool_name: str, args: dict) -> str:
+    """Generate human-readable action text for tool calls"""
+    tool_messages = {
+        "open_app": f"Opening {args.get('app_name', 'application')}",
+        "close_app": f"Closing {args.get('app_name', 'application')}",
+        "search": f"Searching for '{args.get('query', 'information')}'",
+        "open_url": f"Opening {args.get('url', 'URL')}",
+        "type_text": f"Typing text",
+        "press_key": f"Pressing {args.get('key', 'key')}",
+        "set_volume": f"Setting volume to {args.get('level', 'specified level')}",
+        "create_note": f"Creating note",
+    }
+    return tool_messages.get(tool_name, f"Executing {tool_name}")
+
+def get_tool_complete_text(tool_name: str) -> str:
+    """Generate completion message for tools"""
+    complete_messages = {
+        "open_app": "Application opened",
+        "close_app": "Application closed",
+        "search": "Search completed",
+        "open_url": "URL opened",
+        "type_text": "Text typed",
+        "press_key": "Key pressed",
+        "set_volume": "Volume adjusted",
+        "create_note": "Note created",
+    }
+    return complete_messages.get(tool_name, f"{tool_name} completed")
 
 # Audio upload endpoint with WebSocket streaming
 @app.post("/api/upload-audio")
@@ -90,18 +88,18 @@ async def upload_audio(audio: UploadFile = File(...)):
         logger.info("Audio bytes read: %d bytes", len(audio_bytes))
         
         # Notify frontend that STT is starting
-        await manager.send_event("stt_start", {})
+        await manager.send_event("status", {"message": "Processing audio..."})
         
         stt_response = elevenlabs.stt(audio_raw)
         logger.info(f"STT response: {stt_response}")
         
         # Send transcript to frontend
-        await manager.send_event("transcript", {"text": stt_response.text})
+        await manager.send_event("status", {"message": f"You said: {stt_response.text}"})
         
         conversation_history.append(HumanMessage(content=stt_response.text))
         
-        # Notify that agent is starting
-        await manager.send_event("agent_start", {"query": stt_response.text})
+        # Track tools used for summary
+        tools_used = []
         
         # Stream events from the graph
         async for event in graph.astream_events(
@@ -115,17 +113,23 @@ async def upload_audio(audio: UploadFile = File(...)):
                 output = event["data"]["output"]
                 if hasattr(output, 'tool_calls') and output.tool_calls:
                     for tool_call in output.tool_calls:
-                        await manager.send_event("tool_call_start", {
-                            "tool": tool_call["name"],
-                            "args": tool_call["args"],
-                            "id": tool_call.get("id", "")
+                        tool_name = tool_call["name"]
+                        args = tool_call["args"]
+                        action_text = get_tool_action_text(tool_name, args)
+                        
+                        tools_used.append({"name": tool_name, "action": action_text})
+                        
+                        await manager.send_event("status", {
+                            "message": action_text
                         })
             
             # When a tool finishes executing
             elif kind == "on_tool_end":
-                await manager.send_event("tool_call_end", {
-                    "tool": event["name"],
-                    "output": str(event["data"].get("output", ""))
+                tool_name = event["name"]
+                complete_text = get_tool_complete_text(tool_name)
+                
+                await manager.send_event("status", {
+                    "message": complete_text
                 })
             
             # When the entire graph finishes
@@ -136,15 +140,21 @@ async def upload_audio(audio: UploadFile = File(...)):
                 
                 logger.info(f"Final message: {final_message.content}")
                 
-                await manager.send_event("agent_complete", {
-                    "response": final_message.content
+                # Create summary of actions
+                if tools_used:
+                    summary = "Task completed. " + ", ".join([t["action"] for t in tools_used])
+                else:
+                    summary = "Task completed"
+                
+                await manager.send_event("status", {
+                    "message": summary
                 })
         
         return {"transcript": stt_response.text, "success": True}
         
     except Exception as e:
         logger.exception("Error during audio upload")
-        await manager.send_event("error", {"message": str(e)})
+        await manager.send_event("status", {"message": f"Error: {str(e)}"})
         return {"success": False, "error": str(e)}
     finally:
         await audio.close()

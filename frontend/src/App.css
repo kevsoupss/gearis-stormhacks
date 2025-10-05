@@ -39,7 +39,9 @@ body {
     flex-direction: column;
     gap: 20px;
     min-width: 280px;
-    max-width: 320px;
+    max-width: 400px;
+    width: fit-content;
+    -webkit-app-region: drag;
 }
 
 .controls {
@@ -108,7 +110,8 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
         opacity: 1;
         transform: scale(1);
     }
@@ -121,10 +124,10 @@ body {
 .status-text {
     color: rgba(255, 255, 255, 0.9);
     font-size: 13px;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-weight: 500;
     flex: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    overflow: visible; /* Change from hidden */
+    white-space: normal; /* Change from nowrap */
+    word-wrap: break-word;
 }

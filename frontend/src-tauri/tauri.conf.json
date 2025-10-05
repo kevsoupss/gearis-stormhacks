@@ -24,6 +24,11 @@
                         "args": true
                     }
                 ]
+            },
+            "window": {
+                "all": false,
+                "hide": true,
+                "show": true
             }
         },
         "macOSPrivateApi": true,
@@ -31,7 +36,7 @@
             {
                 "title": "frontend",
                 "width": 400,
-                "height": 100,
+                "minHeight": 100,
                 "decorations": false,
                 "transparent": true,
                 "resizable": false,

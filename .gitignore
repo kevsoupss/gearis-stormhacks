@@ -26,6 +26,7 @@ backend/uploads
 .DS_Store
 Thumbs.db
 
+wordwake/utterance.wav
 # Optional: build outputs
 *.exe
 *.dll
