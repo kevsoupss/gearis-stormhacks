@@ -6,7 +6,6 @@ from .browser_toolkit import BrowserToolkit
 from .spotify_toolkit import SpotifyToolkit
 from .youtube_toolkit import YouTubeToolkit
 from .discord_toolkit import DiscordToolkit
-from .rag import RagTool
 
 # Get all tools from all toolkits
 def get_all_tools() -> List[BaseTool]:
@@ -16,8 +15,7 @@ def get_all_tools() -> List[BaseTool]:
         BrowserToolkit.get_tools() +
         SpotifyToolkit.get_tools() +
         YouTubeToolkit.get_tools() +
-        DiscordToolkit.get_tools() +
-        RagTool.get_tool()
+        DiscordToolkit.get_tools()
     )
 
 # # Or get specific toolkits

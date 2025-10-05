@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
-llm_with_tools = llm.bind_tools(tools).with_config(verbose=True)
+llm_with_tools = llm.bind_tools(tools)
 
 
 def agent_node(state: AgentState) -> AgentState:

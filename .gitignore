@@ -13,7 +13,6 @@ src-tauri/tauri.conf.json.bak
 # Python / backend
 backend/venv/
 backend/.venv
-.vector_db
 __pycache__/
 *.pyc
 *.pyo

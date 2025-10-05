@@ -1,5 +1,4 @@
 from io import BytesIO
-from storage.main import ChromaService
 from elabs.main import ElevenLabsService
 from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,7 +13,6 @@ from typing import List
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
 elevenlabs = ElevenLabsService()
-chroma_service = ChromaService.get_instance()
 graph = create_graph()
 conversation_history = []
 
@@ -53,20 +51,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-def on_startup():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
-    chroma_service.start()
-    logger.info("✅ File watcher started in background.")
+# Create uploads directory if it doesn't exist
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
 
-@app.on_event("shutdown")
-def on_shutdown():
-    chroma_service.stop()
+# Example data
+fake_users_db = {
+    1: {"id": 1, "name": "Alice"},
+    2: {"id": 2, "name": "Bob"},
+}
 
 # Health check endpoint
 @app.get("/ping")
 def ping():
     return {"message": "pong"}
+
+# User model
+class User(BaseModel):
+    id: int
+    name: str
+
+# Get user by ID
+@app.get("/users/{user_id}", response_model=User)
+def get_user(user_id: int):
+    user = fake_users_db.get(user_id)
+    if not user:
+        return {"error": "User not found"}
+    return user
+
+# Example POST endpoint
+@app.post("/users", response_model=User)
+def create_user(user: User):
+    fake_users_db[user.id] = user.dict()
+    return user
 
 # WebSocket endpoint
 @app.websocket("/ws")
@@ -80,7 +97,7 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(websocket)
 
-# Audio upload endpoint with WebSocket streamingndpoint
+# Audio upload endpoint with WebSocket streaming
 @app.post("/api/upload-audio")
 async def upload_audio(audio: UploadFile = File(...)):
     global conversation_history
