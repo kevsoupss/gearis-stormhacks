@@ -1,4 +1,3 @@
-import logging
 import subprocess
 import time
 from typing import List
@@ -45,7 +44,6 @@ class SpotifyToolkit:
             Args:
                 query: Song name, artist, or album (e.g., "Bohemian Rhapsody Queen")
             """
-            logging.info("calling play spotify track tool")
             try:
                 subprocess.run(['open', '-a', 'Spotify'], check=True)
                 time.sleep(1.5)
@@ -74,7 +72,6 @@ class SpotifyToolkit:
             Args:
                 query: What to search for
             """
-            logging.info("calling spotify search tool")
             try:
                 subprocess.run(['open', '-a', 'Spotify'], check=True)
                 time.sleep(2)
@@ -93,7 +90,6 @@ class SpotifyToolkit:
         @tool
         def spotify_play() -> str:
             """Plays or resumes the current track in Spotify."""
-            logging.info("calling spotify play track tool")
             try:
                 applescript = 'tell application "Spotify" to play'
                 subprocess.run(['osascript', '-e', applescript], check=True)
@@ -106,7 +102,6 @@ class SpotifyToolkit:
         @tool
         def spotify_pause() -> str:
             """Pauses the current track in Spotify."""
-            logging.info("calling spotify pause track tool")
             try:
                 applescript = 'tell application "Spotify" to pause'
                 subprocess.run(['osascript', '-e', applescript], check=True)
@@ -119,7 +114,6 @@ class SpotifyToolkit:
         @tool
         def spotify_next() -> str:
             """Skips to the next track in Spotify."""
-            logging.info("calling spotify skip track tool")
             try:
                 applescript = 'tell application "Spotify" to next track'
                 subprocess.run(['osascript', '-e', applescript], check=True)
@@ -133,7 +127,6 @@ class SpotifyToolkit:
         @tool
         def spotify_previous() -> str:
             """Goes back to the previous track in Spotify."""
-            logging.info("calling spotify previous track tool")
             try:
                 applescript = 'tell application "Spotify" to previous track'
                 subprocess.run(['osascript', '-e', applescript], check=True)
@@ -147,7 +140,6 @@ class SpotifyToolkit:
         @tool
         def spotify_current_track() -> str:
             """Gets information about the currently playing track in Spotify."""
-            logging.info("calling spotify current track tool")
             try:
                 track_info = SpotifyToolkit._get_current_track()
                 return f"🎵 Currently playing: {track_info}"
@@ -162,7 +154,6 @@ class SpotifyToolkit:
             Args:
                 volume: Volume level from 0-100
             """
-            logging.info("calling spotify set volume tool")
             try:
                 volume = max(0, min(100, volume))
                 applescript = f'tell application "Spotify" to set sound volume to {volume}'
@@ -179,7 +170,6 @@ class SpotifyToolkit:
             Args:
                 playlist_name: Name of the playlist to play
             """
-            logging.info("calling spotify play playlist tool")
             try:
                 import urllib.parse
                 encoded_name = urllib.parse.quote(playlist_name)
