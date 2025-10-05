@@ -10,6 +10,7 @@ from .cool_toolkit import CoolToolkit
 from .camera_toolkit import CameraToolkit
 from .rag import RagTool
 from .tauri_toolkit import TauriControlToolkit
+from .google_toolkit import GoogleToolkit
 
 # Get all tools from all toolkits
 def get_all_tools() -> List[BaseTool]:
@@ -23,7 +24,8 @@ def get_all_tools() -> List[BaseTool]:
         CoolToolkit.get_tools() + 
         RagTool.get_tool() +
         TauriControlToolkit.get_tools() +
-        CameraToolkit.get_tools()
+        CameraToolkit.get_tools() +
+        GoogleToolkit.get_tools()
     )
 
 # # Or get specific toolkits
