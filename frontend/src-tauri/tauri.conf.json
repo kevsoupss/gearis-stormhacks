@@ -31,6 +31,10 @@
                 "show": true
             }
         },
+        "systemTray": {
+            "iconPath": "icons/icon.png",
+            "iconAsTemplate": true
+        },
         "macOSPrivateApi": true,
         "windows": [
             {

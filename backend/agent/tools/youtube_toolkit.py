@@ -122,6 +122,40 @@ class YouTubeToolkit:
                     
             except Exception as e:
                 return f"Error playing video '{query}': {str(e)}"
+        
+        @tool
+        def youtube_fullscreen(browser: str) -> str:
+            """
+            Toggles fullscreen mode for the currently playing YouTube video.
+            Call this after a video has started playing.
+            
+            Args:
+                browser: Browser to use (Chrome, Safari, Firefox, Arc, Brave, Edge)
+            """
+            try:
+                actual_browser = normalize_app_name(browser)
+                
+                # JavaScript to click YouTube's fullscreen button
+                fullscreen_js = """
+                (function() {
+                    const fullscreenBtn = document.querySelector('.ytp-fullscreen-button');
+                    if (fullscreenBtn) {
+                        fullscreenBtn.click();
+                        if (document.fullscreenElement) {
+                            return 'Exited fullscreen';
+                        } else {
+                            return 'Entered fullscreen';
+                        }
+                    }
+                    return 'Fullscreen button not found - make sure a video is playing';
+                })();
+                """
+                
+                result = YouTubeToolkit._execute_js_in_browser(fullscreen_js, actual_browser)
+                return result or "Toggled fullscreen"
+                    
+            except Exception as e:
+                return f"Error toggling fullscreen: {str(e)}"
 
         @tool
         def youtube_open_channel(channel_name: str, browser: str) -> str:
@@ -313,6 +347,7 @@ class YouTubeToolkit:
         return [
             youtube_search,
             youtube_play_video,
+            youtube_fullscreen,
             youtube_open_channel,
             youtube_open_url,
             youtube_play_playlist,
